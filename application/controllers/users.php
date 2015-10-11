@@ -1,17 +1,21 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Messages extends CI_Controller {
+class Users extends CI_Controller {
 
   public function index () {
     $keyword = $this->input->get ('keyword');
     $offset = ($offset = $this->input->get ('per_page')) ? $offset : 0;
 
     $limit = 10;
-    $total = $this->message_model->get_total_by_keyword ($keyword);
-    $messages = $this->message_model->get_list_by_offset_limit_by_keyword ($offset, $limit, $keyword);
-    
+    $total = $this->user_model->get_total_by_keyword (user () ? user ()->id : 0, $keyword);
+    $users = $this->user_model->get_list_by_offset_limit_by_keyword (user () ? user ()->id : 0, $offset, $limit, $keyword);
+
+    foreach ($users as $user) {
+        $user->is_friend = $this->friend_model->is_friend (user () ? user ()->id : 0, $user->id);
+    }
+
     $this->load->library ('pagination');
-    $config['base_url'] = base_url ('messages/index/?' . ($keyword ? 'keyword=' . $keyword : ''));
+    $config['base_url'] = base_url ('users/index/?' . ($keyword ? 'keyword=' . $keyword : ''));
     $config['total_rows'] = $total;
     $config['per_page'] = $limit;
     $config['page_query_string'] = true;
@@ -46,49 +50,44 @@ class Messages extends CI_Controller {
     $pagination = $this->pagination->create_links ();
 
     $navbar = $this->load->view('_navbar', array (
-        'page' => 'messages',
+        'page' => 'users',
         'keyword' => $keyword
       ), true);
 
-    $content = $this->load->view('messages/index', array (
-      'messages' => $messages,
+    $content = $this->load->view('users/index', array (
+      'users' => $users,
       'pagination' => $pagination
       ), true);
 
     $this->load->view('_layout', array (
-        'title' => '我的動態',
+        'title' => '所有使用者',
         'navbar' => $navbar,
         'content' => $content
       ));
   }
-  public function message_post () {
-    $content = $this->input->post ('content');
-
-    if (!$content) {
-      $this->session->set_flashdata ('_message', '填寫的內容有誤');
-      return redirect (base_url ('messages/index'));
-    }
-
+  public function bind ($friend_id = 0) {
     if (!user ()) {
-      $this->session->set_flashdata ('_message', '您沒有登入');
-      return redirect (base_url ('messages/index'));
+      $this->session->set_flashdata ('_message', '請先登入');
+      return redirect (base_url ('users'));
     }
 
-    $data = array (
-        'user_id' => user ()->id,
-        'content' => $content,
-        'created_at' => date ('Y-m-d H:i:s')
-      );
-
-    $message_id = $this->message_model->create ($data);
-
-    if (!$message_id) {
-      $this->session->set_flashdata ('_message', '新增失敗');
-      return redirect (base_url ('messages/index'));
+    $id = $this->friend_model->create (user ()->id, $friend_id);
+    if (!$id) {
+        $this->session->set_flashdata ('_message', '加入好友失敗');
+        return redirect (base_url ('users'));   
+    }
+    $this->session->set_flashdata ('_message', '加入好友成功');
+    return redirect (base_url ('users'));   
+  }
+  public function unbind ($friend_id = 0) {
+    if (!user ()) {
+      $this->session->set_flashdata ('_message', '請先登入');
+      return redirect (base_url ('users'));
     }
 
-    $this->session->set_flashdata ('_message', '新增成功');
-    return redirect (base_url ('messages/index'));
+    $this->friend_model->destroy_by_friend_id (user ()->id, $friend_id);
 
+    $this->session->set_flashdata ('_message', '刪除好友成功');
+    return redirect (base_url ('users'));
   }
 }

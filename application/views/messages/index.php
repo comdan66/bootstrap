@@ -35,8 +35,6 @@ if (!user ()) { ?>
 <?php
   } ?>
 
-
-
 <nav>
   <?php echo $pagination;?>
 </nav>

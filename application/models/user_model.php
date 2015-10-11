@@ -56,4 +56,22 @@ class User_model extends CI_Model {
       return null;
     }
   }
+
+  public function get_total_by_keyword ($user_id = 0, $keyword = '') {
+    if ($keyword) $this->db->like ('name', $keyword, 'both');
+    $this->db->where ('id !=', $user_id);
+    $this->db->from ('users');
+    return $this->db->count_all_results ();
+  }
+  public function get_list_by_offset_limit_by_keyword ($user_id = 0, $offset = 0, $limit = 10, $keyword = '') {
+    $this->db->select ('*');
+    $this->db->limit ($limit, $offset);
+    if ($keyword) $this->db->like ('name', $keyword, 'both');
+    $this->db->where ('id !=', $user_id);
+    $this->db->order_by ('users.id', 'DESC');
+    $this->db->from ('users');
+    
+    $query = $this->db->get ();
+    return $query->result ();
+  }
 }

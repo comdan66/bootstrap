@@ -5,7 +5,7 @@ class Welcome extends CI_Controller {
 	public function index () {
 
     $navbar = $this->load->view('_navbar', array (
-        'active' => 'welcome'
+        'page' => 'welcome'
       ), true);
 
     $content = $this->load->view('welcome/index', array (

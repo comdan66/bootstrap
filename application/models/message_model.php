@@ -11,15 +11,17 @@ class Message_model extends CI_Model {
     return $this->db->insert_id();
   }
 
-  public function get_total () {
+  public function get_total_by_keyword ($keyword = '') {
+    if ($keyword) $this->db->like ('content', $keyword, 'both');
     $this->db->from ('messages');
     return $this->db->count_all_results ();
   }
-  public function get_list_by_offset_limit ($offset = 0, $limit = 10) {
+  public function get_list_by_offset_limit_by_keyword ($offset = 0, $limit = 10, $keyword = '') {
     $this->db->select ('*');
     $this->db->limit ($limit, $offset);
-    $this->db->order_by ('messages.id', 'DESC');
+    if ($keyword) $this->db->like ('content', $keyword, 'both');
     $this->db->join ('users', 'messages.user_id = users.id');
+    $this->db->order_by ('messages.id', 'DESC');
     $this->db->from ('messages');
     
     $query = $this->db->get ();

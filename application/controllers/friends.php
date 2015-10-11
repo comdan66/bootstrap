@@ -1,17 +1,17 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Messages extends CI_Controller {
+class Friends extends CI_Controller {
 
   public function index () {
     $keyword = $this->input->get ('keyword');
     $offset = ($offset = $this->input->get ('per_page')) ? $offset : 0;
 
-    $limit = 10;
-    $total = $this->message_model->get_total_by_keyword ($keyword);
-    $messages = $this->message_model->get_list_by_offset_limit_by_keyword ($offset, $limit, $keyword);
-    
+    $limit = 12;
+    $total = $this->friend_model->get_total_by_keyword (user () ? user()->id : 0, $keyword);
+    $friends = $this->friend_model->get_list_by_offset_limit_by_keyword (user () ? user()->id : 0, $offset, $limit, $keyword);
+
     $this->load->library ('pagination');
-    $config['base_url'] = base_url ('messages/index/?' . ($keyword ? 'keyword=' . $keyword : ''));
+    $config['base_url'] = base_url ('friends/index/?' . ($keyword ? 'keyword=' . $keyword : ''));
     $config['total_rows'] = $total;
     $config['per_page'] = $limit;
     $config['page_query_string'] = true;
@@ -46,49 +46,30 @@ class Messages extends CI_Controller {
     $pagination = $this->pagination->create_links ();
 
     $navbar = $this->load->view('_navbar', array (
-        'page' => 'messages',
+        'page' => 'friends',
         'keyword' => $keyword
       ), true);
 
-    $content = $this->load->view('messages/index', array (
-      'messages' => $messages,
+    $content = $this->load->view('friends/index', array (
+      'friends' => $friends,
       'pagination' => $pagination
       ), true);
 
     $this->load->view('_layout', array (
-        'title' => '我的動態',
+        'title' => '我的好友',
         'navbar' => $navbar,
         'content' => $content
       ));
   }
-  public function message_post () {
-    $content = $this->input->post ('content');
-
-    if (!$content) {
-      $this->session->set_flashdata ('_message', '填寫的內容有誤');
-      return redirect (base_url ('messages/index'));
-    }
-
+  public function unbind ($friend_id = 0) {
     if (!user ()) {
-      $this->session->set_flashdata ('_message', '您沒有登入');
-      return redirect (base_url ('messages/index'));
+      $this->session->set_flashdata ('_message', '刪除好友失敗');
+      return redirect (base_url ('friends'));
     }
 
-    $data = array (
-        'user_id' => user ()->id,
-        'content' => $content,
-        'created_at' => date ('Y-m-d H:i:s')
-      );
+    $this->friend_model->destroy_by_friend_id (user ()->id, $friend_id);
 
-    $message_id = $this->message_model->create ($data);
-
-    if (!$message_id) {
-      $this->session->set_flashdata ('_message', '新增失敗');
-      return redirect (base_url ('messages/index'));
-    }
-
-    $this->session->set_flashdata ('_message', '新增成功');
-    return redirect (base_url ('messages/index'));
-
+    $this->session->set_flashdata ('_message', '刪除好友成功');
+    return redirect (base_url ('friends'));
   }
 }

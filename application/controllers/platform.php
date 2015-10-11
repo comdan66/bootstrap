@@ -19,7 +19,7 @@ class Platform extends CI_Controller {
       return redirect (base_url ());
 
     $navbar = $this->load->view('_navbar', array (
-        'active' => 'login'
+        'page' => 'login'
       ), true);
 
     $content = $this->load->view('platform/login', array (
@@ -61,7 +61,7 @@ class Platform extends CI_Controller {
       return redirect (base_url ());
 
     $navbar = $this->load->view('_navbar', array (
-        'active' => 'register'
+        'page' => 'register'
       ), true);
 
     $content = $this->load->view('platform/register', array (
